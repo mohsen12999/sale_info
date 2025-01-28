@@ -2,7 +2,7 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document } from 'mongoose';
 
 @Schema()
-export class invoice extends Document {
+export class Invoice extends Document {
   // The name or identifier of the customer
   @Prop({type: String})
   customer: string;
@@ -25,4 +25,4 @@ export class invoice extends Document {
   items: { sku: String; qt: Number }[];
 }
 
-export const InvoiceSchema = SchemaFactory.createForClass(invoice);
+export const InvoiceSchema = SchemaFactory.createForClass(Invoice);
