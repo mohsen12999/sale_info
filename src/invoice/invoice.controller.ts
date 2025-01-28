@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { InvoiceService } from './invoice.service';
 
 @Controller('invoice')
@@ -19,7 +19,19 @@ export class InvoiceController {
 
   // Retrieve a list of all invoices (with optional filters like date range).
   @Get()
-  findAll() {
-    return this.invoiceService.findAll();
+  findAll(
+    @Query('name') name?: string,
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+    @Query('minAmount') minAmount?: string,
+    @Query('maxAmount') maxAmount?: string,
+  ) {
+    return this.invoiceService.findAll({
+      name,
+      startDate: startDate ? new Date(startDate) : undefined,
+      endDate: endDate ? new Date(endDate) : undefined,
+      minAmount: minAmount ? parseFloat(minAmount) : undefined,
+      maxAmount: maxAmount ? parseFloat(maxAmount) : undefined,
+    });
   }
 }
