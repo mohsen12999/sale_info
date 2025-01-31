@@ -4,15 +4,23 @@
 
 ## Description
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+simple restful project for add invoice and get daily email report via rabbitmq and sendgrid.
 
-## Project setup
+## Run Project
+
+```bash
+docker-compose up --build
+```
+
+and see project in [localhost:3000](http://localhost:3000)
+
+## Project NestJs setup
 
 ```bash
 npm install
 ```
 
-## Compile and run the project
+## Compile and run  NestJs project
 
 ```bash
 # development
