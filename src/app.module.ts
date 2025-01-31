@@ -6,6 +6,7 @@ import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { InvoiceModule } from './invoice/invoice.module';
 import { ClientsModule, Transport } from '@nestjs/microservices';
+import { EmailSenderModule } from './email-sender/email-sender.module';
 
 @Module({
   imports: [
@@ -24,7 +25,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
           },
         },
       },
-    ])
+    ]), EmailSenderModule
   ],
   controllers: [AppController],
   providers: [AppService],
