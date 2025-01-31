@@ -1,7 +1,8 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { Cron, CronExpression } from '@nestjs/schedule';
+import { ClientProxy } from '@nestjs/microservices';
 
 import { Invoice } from './schemas/invoice.schema';
 
@@ -11,7 +12,8 @@ export class InvoiceService {
 
   constructor(
     @InjectModel(Invoice.name) private invoiceModel: Model<Invoice>,
-  ) {}
+    @Inject('RABBITMQ_SERVICE') private readonly rabbitMQClient: ClientProxy,
+  ) { }
 
   async create(createDto: any): Promise<Invoice> {
     const createdItem = new this.invoiceModel(createDto);
@@ -108,9 +110,18 @@ export class InvoiceService {
 
       this.logger.log(`Total Sales: ${totalSales}`);
       this.logger.log(`Total Quantity: ${totalQuantity.map((item) => `${item._id}: ${item.totalQuantity}`).join(', ')}`);
-      
 
-      // You can store salesData in a separate collection for reports or send notifications
+      const report = {
+        date: new Date().toISOString().split('T')[0], // YYYY-MM-DD
+        totalSales: totalSales,
+        totalQuantity: totalQuantity.map((item) => `${item._id}: ${item.totalQuantity}`).join(', '),
+      }
+
+
+      this.logger.log(`Sending Sales Report to RabbitMQ: ${JSON.stringify(report)}`);
+
+      // Send report to RabbitMQ Queue
+      this.rabbitMQClient.emit('daily_sales_report', report);
 
     } catch (error) {
       this.logger.error('Error calculating daily sales:', error);
