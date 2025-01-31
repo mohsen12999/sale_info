@@ -1,0 +1,38 @@
+version: "3.8"
+
+services:
+  mongodb:
+    image: mongo:6
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  rabbitmq:
+    image: rabbitmq:management
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - "5672:5672"   # AMQP connection
+      - "15672:15672" # Management UI
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  app:
+    build: .
+    container_name: nestjs-app
+    restart: always
+    depends_on:
+      - mongodb
+      - rabbitmq
+    environment:
+      MONGO_URI: mongodb://mongodb:27017/sale-info-db
+      RABBITMQ_URL: amqp://rabbitmq
+    ports:
+      - "3000:3000"
+
+volumes:
+  mongo_data:
