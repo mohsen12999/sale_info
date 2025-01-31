@@ -1,10 +1,14 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { Cron, CronExpression } from '@nestjs/schedule';
+
 import { Invoice } from './schemas/invoice.schema';
 
 @Injectable()
 export class InvoiceService {
+  private readonly logger = new Logger(InvoiceService.name);
+
   constructor(
     @InjectModel(Invoice.name) private invoiceModel: Model<Invoice>,
   ) {}
@@ -55,4 +59,61 @@ export class InvoiceService {
   // async delete(id: string): Promise<any> {
   //   return this.invoiceModel.findByIdAndDelete(id).exec();
   // }
+
+  // Runs every day at 12:00 PM
+  @Cron(CronExpression.EVERY_DAY_AT_NOON)
+  async calculateDailySales(): Promise<void> {
+    this.logger.log('Running Daily Sales Calculation Job...');
+
+    const startOfDay = new Date();
+    startOfDay.setHours(0, 0, 0, 0);
+
+    const endOfDay = new Date();
+    endOfDay.setHours(23, 59, 59, 999);
+
+    try {
+      // calculate sum of all amount
+      const totalSales = await this.invoiceModel.aggregate([
+        {
+          $match: {
+            date: { $gte: startOfDay, $lte: endOfDay },
+          },
+        },
+        {
+          $group: {
+            _id: null,
+            totalSales: { $sum: '$amount' },
+          },
+        },
+      ]).then((result) => result[0].totalSales);
+
+
+      // Aggregation Pipeline: Calculate Total Quantity per SKU
+      const totalQuantity = await this.invoiceModel.aggregate([
+        {
+          $match: {
+            date: { $gte: startOfDay, $lte: endOfDay },
+          },
+        },
+        {
+          $unwind: '$items', // Flatten items array
+        },
+        {
+          $group: {
+            _id: '$items.sku', // Group by SKU
+            totalQuantity: { $sum: '$items.qt' }, // Sum quantity per SKU
+          },
+        },
+      ]);
+
+      this.logger.log(`Total Sales: ${totalSales}`);
+      this.logger.log(`Total Quantity: ${totalQuantity.map((item) => `${item._id}: ${item.totalQuantity}`).join(', ')}`);
+      
+
+      // You can store salesData in a separate collection for reports or send notifications
+
+    } catch (error) {
+      this.logger.error('Error calculating daily sales:', error);
+    }
+  }
 }
