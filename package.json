@@ -26,6 +26,7 @@
     "@nestjs/mongoose": "^11.0.0",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/schedule": "^5.0.1",
+    "@sendgrid/mail": "^8.1.4",
     "amqplib": "^0.10.5",
     "mongoose": "^8.9.5",
     "reflect-metadata": "^0.2.2",
